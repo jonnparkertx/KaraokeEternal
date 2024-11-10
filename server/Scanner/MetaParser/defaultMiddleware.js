@@ -7,7 +7,9 @@ export default m
 // ----------------------
 
 m.set('normalize whitespace', (ctx, next) => {
-  ctx.name = ctx.name.replace(/_/g, ' ') // underscores to spaces
+  if(ctx.cfg.delimiter !== '_') {
+    ctx.name = ctx.name.replace(/_/g, ' ') // underscores to spaces if underscore is not delimiter
+  }
   ctx.name = ctx.name.replace(/ {2,}/g, ' ') // multiple spaces to single
   next()
 })
@@ -32,6 +34,13 @@ m.set('split', (ctx, next) => {
     ...ctx.cfg,
   }
 
+  // remove any strings marked as ignore
+  if (ctx.cfg.ignore?.length) {
+    for(const i of ctx.cfg.ignore) {
+      ctx.name = ctx.name.replace(i, '')
+    }
+  }
+  
   // allow leading and/or trailing space when searching for delimiter,
   // then pick the match with the most whitespace (longest match) as it's
   // most likely to be the actual delimiter rather than a false positive
@@ -39,14 +48,14 @@ m.set('split', (ctx, next) => {
   const matches = ctx.name.match(d)
 
   if (!matches) {
-    throw new Error('no artist/title delimiter in filename')
+    throw new Error('no artist/title delimiter in filename regex', d)
   }
 
   const longest = matches.reduce((a, b) => a.length > b.length ? a : b)
   ctx.parts = ctx.name.split(longest)
-
+  
   if (ctx.parts.length < 2) {
-    throw new Error('no artist/title delimiter in filename')
+    throw new Error('no artist/title delimiter in filename - too few parts')
   }
 
   next()
@@ -64,6 +73,11 @@ m.set('set title', (ctx, next) => {
   if (ctx.title) return next()
 
   // @todo this assumes delimiter won't appear in title
+  // if config shows index choose that  
+  if (ctx.cfg.titleIndex !== undefined) {
+    ctx.title = ctx.parts[ctx.cfg.titleIndex].trim()
+    return next()
+  }
   ctx.title = ctx.cfg.artistOnLeft ? ctx.parts.pop() : ctx.parts.shift()
   ctx.title = ctx.title.trim()
   next()
@@ -73,7 +87,11 @@ m.set('set title', (ctx, next) => {
 m.set('set artist', (ctx, next) => {
   // skip if already set
   if (ctx.artist) return next()
-
+  // if config shows index choose that  
+  if (ctx.cfg.artistIndex !== undefined) {
+    ctx.artist = ctx.parts[ctx.cfg.artistIndex].trim()
+    return next()
+  }
   ctx.artist = ctx.parts.join(ctx.cfg.delimiter)
   ctx.artist = ctx.artist.trim()
   next()
@@ -134,13 +152,17 @@ m.set('normalize title', (ctx, next) => {
 // clean left-to-right until a valid part is encountered (or only 2 parts left)
 function cleanParts (patterns) {
   return function (ctx, next) {
+    if(ctx.cfg.artistIndex || ctx.cfg.titleIndex) {
+      return next()
+    }
+
     for (let i = 0; i < ctx.parts.length; i++) {
       if (patterns.some(exp => exp.test(ctx.parts[i].trim())) && ctx.parts.length > 2) {
         ctx.parts.shift()
         i--
       } else break
     }
-
+    
     next()
   }
 }
@@ -167,7 +189,7 @@ function moveArticles (str, articles) {
       const parens = /[([{].*$/.exec(str)
 
       if (parens) {
-        str = str.substring(search.length, parens.index - search.length)
+        str = str.substring(search.length, parens.index)
           .trim() + `, ${article} ${parens[0]}`
       } else {
         str = str.substring(search.length) + `, ${article}`
