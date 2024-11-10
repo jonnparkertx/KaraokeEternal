@@ -4,7 +4,7 @@ import jsone from 'json-e'
 import defaultMiddleware from './defaultMiddleware.js'
 const log = getLogger('MetaParser')
 const defaultParser = compose(...defaultMiddleware.values())
-const parserCfgProps = ['articles', 'artistOnLeft', 'delimiter']
+const parserCfgProps = ['articles', 'artistOnLeft', 'delimiter', 'ignore', 'artistIndex', 'titleIndex']
 
 function compose (...args) {
   const flattened = args.reduce(
