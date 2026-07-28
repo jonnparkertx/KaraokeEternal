@@ -6,6 +6,7 @@ import styles from './CDGPlayer.css'
 const api = new HttpApi('media')
 const BACKDROP_PADDING = 10 // px at 1:1 scale
 const BORDER_RADIUS = parseInt(getComputedStyle(document.body).getPropertyValue('--border-radius'))
+const DEFAULT_BOUNDS = [10, 10, 290, 206] // full CDG content area when background is solid
 
 interface CDGPlayerProps {
   cdgAlpha: number
@@ -73,7 +74,9 @@ class CDGPlayer extends React.Component<CDGPlayerProps> {
 
   render () {
     const { cdgAlpha, cdgSize, width, height } = this.props
-    const [x1, y1, x2, y2] = this.state.contentBounds
+    const [x1, y1, x2, y2] = cdgAlpha === 1 && cdgSize === 1
+      ? DEFAULT_BOUNDS
+      : this.state.contentBounds
     const [r, g, b] = this.state.backgroundRGBA
     const filters = []
 

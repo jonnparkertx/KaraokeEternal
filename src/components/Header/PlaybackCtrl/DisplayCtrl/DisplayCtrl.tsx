@@ -154,7 +154,7 @@ const DisplayCtrl = ({
                 <label id='label-lyrics-size'>Size</label>
                 <Slider
                   min={0.4}
-                  max={0.9}
+                  max={1}
                   step={0.01}
                   value={cdgSize}
                   onChange={handleSize}

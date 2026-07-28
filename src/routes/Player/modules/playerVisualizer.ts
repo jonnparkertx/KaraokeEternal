@@ -40,7 +40,7 @@ export interface PlayerVisualizerState {
 }
 
 const initialState: PlayerVisualizerState = {
-  isEnabled: true,
+  isEnabled: false,
   isSupported: true,
   ...getRandomPreset(),
   sensitivity: 1,

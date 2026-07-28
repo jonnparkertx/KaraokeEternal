@@ -119,8 +119,8 @@ export interface PlayerState {
 }
 
 const initialState: PlayerState = {
-  cdgAlpha: 0.5,
-  cdgSize: 0.65,
+  cdgAlpha: 1,
+  cdgSize: 1,
   errorMessage: '',
   historyJSON: '[]', // queueIds (JSON string is hack to pass selector equality check on clients)
   isAtQueueEnd: false,
