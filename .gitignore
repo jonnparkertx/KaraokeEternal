@@ -12,3 +12,7 @@ node_modules/
 *.tsbuildinfo
 .hugo_build.lock
 .vscode
+.dockerignore
+docker-compose.yml
+Dockerfile
+karaoke-eternal-local.tar
