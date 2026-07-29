@@ -6,6 +6,7 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  overflow: hidden;
 
   --color-pink: hsl(var(--hue-pink), 62%, 57%);
   --color-blue: hsl(var(--hue-blue), 90%, 50%);

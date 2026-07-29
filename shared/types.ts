@@ -1,3 +1,5 @@
+import type { Theme } from './theme.js'
+
 export interface Artist {
   artistId: number
   name: string
@@ -40,6 +42,12 @@ export interface IRoomPrefs {
     opacity: number
     password: string
     size: number
+    /** Center watermark behind QR modules */
+    watermark?: 'default' | 'brand' | 'custom'
+    /** Fade for watermark (lower = more faded / safer for scanning) */
+    watermarkOpacity?: number
+    /** Cache-buster when watermark is `custom` */
+    watermarkDateUpdated?: number | null
   }
   user?: {
     isNewAllowed?: boolean
@@ -48,6 +56,13 @@ export interface IRoomPrefs {
   roles?: Record<number, {
     allowNew: boolean
   }>
+  /** Empty-queue / idle player display */
+  idle?: {
+    /** `message` = color-cycle text; `logo` = bouncing brand logo */
+    mode: 'message' | 'logo'
+    /** Custom text when mode is `message` (default: CAN HAZ MOAR SONGZ?) */
+    message?: string
+  }
 }
 
 export interface Room {
@@ -117,6 +132,8 @@ export interface Prefs {
   isFirstRun?: boolean
   isScanning: boolean
   isReplayGainEnabled: boolean
+  logoDateUpdated: number | null
+  theme: Theme
   paths: {
     result: number[]
     entities: Record<number, Path>

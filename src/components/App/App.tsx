@@ -5,10 +5,12 @@ import store from 'store/store'
 import Persistor from 'store/Persistor'
 import CoreLayout from './CoreLayout/CoreLayout'
 import Spinner from '../Spinner/Spinner'
+import ThemeApplier from './ThemeApplier'
 
 const App = () => (
   <Provider store={store}>
     <PersistGate loading={<Spinner />} persistor={Persistor.get()}>
+      <ThemeApplier />
       <React.Suspense fallback={<Spinner />}>
         <CoreLayout />
       </React.Suspense>

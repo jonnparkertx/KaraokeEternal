@@ -1,6 +1,7 @@
 import getLogger from '../lib/Log.js'
 import Library from '../Library/Library.js'
 import Prefs from './Prefs.js'
+import { normalizeTheme } from '../../shared/theme.js'
 import { LIBRARY_PUSH, PREFS_PATH_SET_PRIORITY, PREFS_PUSH, PREFS_SET, _ERROR } from '../../shared/actionTypes.js'
 const log = getLogger(`server[${process.pid}]`)
 
@@ -11,10 +12,16 @@ const ACTION_HANDLERS = {
         type: PREFS_SET + _ERROR,
         error: 'Unauthorized',
       })
+      return
     }
 
-    Prefs.set(payload.key, payload.data)
-    log.info('%s (%s) set pref %s = %s', sock.user.name, sock.id, payload.key, payload.data)
+    let data = payload.data
+    if (payload.key === 'theme') {
+      data = normalizeTheme(payload.data)
+    }
+
+    Prefs.set(payload.key, data)
+    log.info('%s (%s) set pref %s = %s', sock.user.name, sock.id, payload.key, data)
 
     pushPrefs(sock)
   },

@@ -4,6 +4,22 @@
   flex: 1;
 }
 
+.custom {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  white-space: normal;
+}
+
+.customImage {
+  display: block;
+  max-width: min(100%, 20em);
+  max-height: 4.5em;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
 .title {
   border: none;
   color: hsl(var(--hue-blue), 10%, 80%);
