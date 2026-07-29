@@ -1,0 +1,9 @@
+.logo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}

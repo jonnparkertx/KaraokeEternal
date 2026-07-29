@@ -1,5 +1,7 @@
 .modal {
-  min-width: 360px;
+  width: min(360px, 90vw);
+  max-width: min(360px, 90vw);
+  box-sizing: border-box;
 }
 
 .fieldContainer,
@@ -9,6 +11,7 @@
   flex-direction: column;
   gap: var(--space-s);
   margin: var(--space-l) 0;
+  min-width: 0;
 
   &:first-child {
     margin-top: 0;

@@ -3,8 +3,16 @@ import sql from 'sqlate'
 import crypto from 'crypto'
 import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
+import { DEFAULT_THEME, normalizeTheme } from '../../shared/theme.js'
 
 const log = getLogger('Prefs')
+
+export const LOGO_KEY = 'logo'
+export const LOGO_MAX_LENGTH = 204800 // 200KB
+
+export function qrWatermarkKey (roomId: number): string {
+  return `qr-watermark-${roomId}`
+}
 
 class Prefs {
   /**
@@ -14,6 +22,8 @@ class Prefs {
     const prefs = {
       paths: { result: [], entities: {} },
       roles: { result: [], entities: {} },
+      logoDateUpdated: null as number | null,
+      theme: { ...DEFAULT_THEME },
     }
 
     {
@@ -59,7 +69,93 @@ class Prefs {
       }
     }
 
+    prefs.logoDateUpdated = Prefs.getLogoDateUpdated()
+    prefs.theme = normalizeTheme(prefs.theme)
+
     return prefs
+  }
+
+  /**
+   * Get a branding image by key
+   */
+  static getBrandingImage (key: string): { image: Buffer, dateUpdated: number } | null {
+    const query = sql`
+      SELECT image, dateUpdated FROM branding
+      WHERE key = ${key}
+    `
+    const row = db.get<{ image: Uint8Array | null, dateUpdated: number }>(String(query), query.parameters)
+
+    if (!row?.image) return null
+
+    return {
+      image: Buffer.from(row.image),
+      dateUpdated: row.dateUpdated,
+    }
+  }
+
+  /**
+   * Get branding image cache-busting timestamp only (no binary)
+   */
+  static getBrandingDateUpdated (key: string): number | null {
+    const query = sql`
+      SELECT dateUpdated FROM branding
+      WHERE key = ${key}
+        AND image IS NOT NULL
+    `
+    const row = db.get<{ dateUpdated: number }>(String(query), query.parameters)
+    return row?.dateUpdated ?? null
+  }
+
+  /**
+   * Store a branding image
+   */
+  static setBrandingImage (key: string, image: Buffer): number {
+    const dateUpdated = Math.floor(Date.now() / 1000)
+    const query = sql`
+      REPLACE INTO branding (key, image, dateUpdated)
+      VALUES (${key}, ${image}, ${dateUpdated})
+    `
+    db.run(String(query), query.parameters)
+    return dateUpdated
+  }
+
+  /**
+   * Remove a branding image
+   */
+  static clearBrandingImage (key: string): void {
+    const query = sql`
+      DELETE FROM branding
+      WHERE key = ${key}
+    `
+    db.run(String(query), query.parameters)
+  }
+
+  /**
+   * Get custom logo PNG and version timestamp, if set
+   */
+  static getLogo (): { image: Buffer, dateUpdated: number } | null {
+    return Prefs.getBrandingImage(LOGO_KEY)
+  }
+
+  /**
+   * Get logo cache-busting timestamp only (no binary)
+   */
+  static getLogoDateUpdated (): number | null {
+    return Prefs.getBrandingDateUpdated(LOGO_KEY)
+  }
+
+  /**
+   * Store custom logo PNG
+   */
+  static setLogo (image: Buffer): number {
+    return Prefs.setBrandingImage(LOGO_KEY, image)
+  }
+
+  /**
+   * Remove custom logo
+   */
+  static clearLogo (): void {
+    Prefs.clearBrandingImage(LOGO_KEY)
   }
 
   /**

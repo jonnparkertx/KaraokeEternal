@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
-import { useAppDispatch } from 'store/hooks'
+import React, { useEffect, useState } from 'react'
+import { useAppDispatch, useAppSelector } from 'store/hooks'
 import { requestPlay } from 'store/modules/status'
+import getRoomPrefs from '../../selectors/getRoomPrefs'
+import { resolveIdlePrefs } from 'shared/roomPrefs'
 import ColorCycle from './ColorCycle/ColorCycle'
+import LogoScreensaver from './LogoScreensaver/LogoScreensaver'
 import UpNow from './UpNow/UpNow'
 import Icon from 'components/Icon/Icon'
 import type { QueueItem } from 'shared/types'
@@ -27,13 +30,36 @@ const PlayerTextOverlay = ({
   height,
 }: PlayerTextOverlayProps) => {
   const dispatch = useAppDispatch()
+  const roomPrefs = useAppSelector(getRoomPrefs)
+  const logoDateUpdated = useAppSelector(state => state.prefs.logoDateUpdated)
   const handlePlay = () => dispatch(requestPlay())
   const [errorOffset] = useState(() => Math.random() * -300)
+  const [logoFailed, setLogoFailed] = useState(false)
+
+  useEffect(() => {
+    setLogoFailed(false)
+  }, [logoDateUpdated])
 
   let Component
 
   if (isQueueEmpty || (isAtQueueEnd && !nextQueueItem)) {
-    Component = <ColorCycle text='CAN HAZ MOAR SONGZ?' className={styles.backdrop} />
+    const idle = resolveIdlePrefs(roomPrefs)
+    const logoSrc = logoDateUpdated
+      ? `${document.baseURI}api/prefs/logo?v=${logoDateUpdated}`
+      : null
+
+    if (idle.mode === 'logo' && logoSrc && !logoFailed) {
+      Component = (
+        <LogoScreensaver
+          src={logoSrc}
+          width={width}
+          height={height}
+          onError={() => setLogoFailed(true)}
+        />
+      )
+    } else {
+      Component = <ColorCycle text={idle.message} className={styles.backdrop} />
+    }
   } else if (!queueItem || (isAtQueueEnd && nextQueueItem)) {
     Component = (
       <>

@@ -1,15 +1,6 @@
 import { RootState } from 'store/store'
 import { createSelector } from '@reduxjs/toolkit'
-import type { IRoomPrefs } from 'shared/types'
-
-const DEFAULT_ROOM_PREFS: IRoomPrefs = {
-  qr: {
-    isEnabled: false,
-    opacity: 0.625,
-    password: '',
-    size: 0.5,
-  },
-}
+import { DEFAULT_ROOM_PREFS } from 'shared/roomPrefs'
 
 const getRoomId = (state: RootState) => state.user.roomId
 const getRooms = (state: RootState) => state.rooms.entities
@@ -24,7 +15,20 @@ const getRoomPrefs = createSelector(
       return DEFAULT_ROOM_PREFS
     }
 
-    return rooms[roomId]?.prefs
+    const prefs = rooms[roomId]?.prefs
+
+    return {
+      ...DEFAULT_ROOM_PREFS,
+      ...prefs,
+      qr: {
+        ...DEFAULT_ROOM_PREFS.qr,
+        ...prefs?.qr,
+      },
+      idle: {
+        ...DEFAULT_ROOM_PREFS.idle,
+        ...prefs?.idle,
+      },
+    }
   })
 
 export default getRoomPrefs

@@ -1,6 +1,7 @@
 .container {
   background: hsl(var(--hue-blue), 20%, 15%);
   border-radius: var(--border-radius);
+  min-width: 0;
   
   &[data-expanded] {
     .icon { 

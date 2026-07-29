@@ -20,7 +20,7 @@ const About = () => {
       <>
         {/* @ts-expect-error: global via Webpack */}
         <a href={__KE_URL_HOME__} target='_blank' rel='noreferrer'>
-          <Logo className={styles.logo} />
+          <Logo className={styles.logo} forceOriginal />
         </a>
         <p className={styles.sm}>
           &copy;

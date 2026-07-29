@@ -1,0 +1,44 @@
+.heading  {
+  button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+    padding: var(--space-s);
+    font-size: var(--font-size-s);
+  }
+
+  svg {
+    height: var(--icon-size-m);
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  padding: var(--space-m) var(--container-padding);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.help {
+  margin: 0;
+  color: hsl(var(--hue-blue), 10%, 60%);
+  font-size: var(--font-size-s);
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  min-width: 0;
+}
+
+.spacedFromInput {
+  margin-top: var(--space-s);
+}
