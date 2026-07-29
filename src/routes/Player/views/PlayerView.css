@@ -4,3 +4,11 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Hide cursor while the player is fullscreen (karaoke display). */
+.container:fullscreen,
+.container:fullscreen *,
+.container:-webkit-full-screen,
+.container:-webkit-full-screen * {
+  cursor: none !important;
+}
