@@ -6,6 +6,7 @@ import { resolveIdlePrefs } from 'shared/roomPrefs'
 import ColorCycle from './ColorCycle/ColorCycle'
 import LogoScreensaver from './LogoScreensaver/LogoScreensaver'
 import UpNow from './UpNow/UpNow'
+import SongCommentBubble from './SongCommentBubble/SongCommentBubble'
 import Icon from 'components/Icon/Icon'
 import type { QueueItem } from 'shared/types'
 import styles from './PlayerTextOverlay.css'
@@ -90,6 +91,7 @@ const PlayerTextOverlay = ({
   return (
     <div style={{ width, height }} className={styles.container}>
       {Component}
+      <SongCommentBubble />
     </div>
   )
 }

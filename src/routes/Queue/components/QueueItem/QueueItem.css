@@ -190,3 +190,25 @@
     background-position: var(--queue-item-tile-size) 0;
   }
 }
+
+.commentModal {
+  width: min(420px, 90vw);
+}
+
+.commentForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.commentHelp {
+  margin: 0;
+  color: hsl(var(--hue-blue), 10%, 60%);
+  font-size: var(--font-size-s);
+}
+
+.commentCount {
+  align-self: flex-end;
+  color: hsl(var(--hue-blue), 10%, 55%);
+  font-size: var(--font-size-s);
+}

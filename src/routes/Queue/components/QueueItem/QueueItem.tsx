@@ -6,8 +6,9 @@ import { useAppDispatch } from 'store/hooks'
 import Button from 'components/Button/Button'
 import ButtonStar from 'components/ButtonStar/ButtonStar'
 import Buttons from 'components/Buttons/Buttons'
+import Modal from 'components/Modal/Modal'
 import UserImage from 'components/UserImage/UserImage'
-import { requestPlayNext, requestReplay } from 'store/modules/status'
+import { requestComment, requestPlayNext, requestReplay } from 'store/modules/status'
 import { showSongInfo } from 'store/modules/songInfo'
 import { toggleSongStarred } from 'store/modules/userStars'
 import { showErrorMessage } from 'store/modules/ui'
@@ -15,6 +16,7 @@ import { queueSong, removeItem } from '../../modules/queue'
 import styles from './QueueItem.css'
 
 const LONG_PRESS_THRESHOLD_MS = 700
+const COMMENT_MAX_LENGTH = 100
 
 interface QueueItemProps {
   artist: string
@@ -73,6 +75,8 @@ const QueueItem = ({
   wait,
 }: QueueItemProps) => {
   const [isExpanded, setExpanded] = useState(false)
+  const [isCommentOpen, setCommentOpen] = useState(false)
+  const [commentText, setCommentText] = useState('')
   const longPressActiveRef = useRef(false)
   const dispatch = useAppDispatch()
 
@@ -96,6 +100,22 @@ const QueueItem = ({
   }
   const handleRemoveClick = () => dispatch(removeItem({ queueId }))
   const handleStarClick = () => dispatch(toggleSongStarred(songId))
+  const handleCommentOpen = () => {
+    setCommentText('')
+    setCommentOpen(true)
+  }
+  const handleCommentClose = () => {
+    setCommentOpen(false)
+    setCommentText('')
+  }
+  const handleCommentSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    const text = commentText.trim()
+    if (!text) return
+
+    dispatch(requestComment({ text, queueId }))
+    handleCommentClose()
+  }
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => {
@@ -171,6 +191,14 @@ const QueueItem = ({
             onClick={handleStarClick}
             count={starCount}
           />
+          {isCurrent && (
+            <Button
+              className={styles.active}
+              icon='COMMENT'
+              onClick={handleCommentOpen}
+              aria-label='Comment on this song'
+            />
+          )}
           {isInfoable && (
             <Button
               className={styles.active}
@@ -251,6 +279,49 @@ const QueueItem = ({
           )}
         </Buttons>
       </div>
+
+      {isCommentOpen && (
+        <Modal
+          title={`Cheer on ${userDisplayName}`}
+          onClose={handleCommentClose}
+          className={styles.commentModal}
+          buttons={(
+            <>
+              <Button
+                variant='primary'
+                onClick={() => handleCommentSubmit()}
+                disabled={!commentText.trim()}
+              >
+                Send
+              </Button>
+              <Button onClick={handleCommentClose}>
+                Cancel
+              </Button>
+            </>
+          )}
+        >
+          <form onSubmit={handleCommentSubmit} className={styles.commentForm}>
+            <p className={styles.commentHelp}>
+              Your message appears on the player for a few seconds.
+            </p>
+            <input
+              type='text'
+              autoComplete='off'
+              autoFocus
+              maxLength={COMMENT_MAX_LENGTH}
+              value={commentText}
+              onChange={e => setCommentText(e.target.value)}
+              placeholder='Nice job!'
+              aria-label='Comment'
+            />
+            <div className={styles.commentCount}>
+              {commentText.length}
+              /
+              {COMMENT_MAX_LENGTH}
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   )
 }
