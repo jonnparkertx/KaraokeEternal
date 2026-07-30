@@ -1,4 +1,5 @@
 import Rooms from '../Rooms/Rooms.js'
+import User from '../User/User.js'
 
 import {
   PLAYER_CMD_NEXT,
@@ -100,14 +101,18 @@ const ACTION_HANDLERS = {
 
     lastCommentAt.set(sock.user.userId, now)
 
+    // Prefer live user row — sock.user is from the JWT at connect time and can
+    // be stale after a profile photo / name update without reconnecting.
+    const dbUser = User.getById(sock.user.userId)
+
     sock.server.to(Rooms.prefix(sock.user.roomId)).emit('action', {
       type: PLAYER_CMD_COMMENT,
       payload: {
         text: text.slice(0, COMMENT_MAX_LENGTH),
         queueId,
         userId: sock.user.userId,
-        userDisplayName: sock.user.name,
-        userDateUpdated: sock.user.dateUpdated,
+        userDisplayName: (dbUser && dbUser.name) || sock.user.name,
+        userDateUpdated: (dbUser && dbUser.dateUpdated) || sock.user.dateUpdated,
         id: now * 1000 + (sock.user.userId % 1000),
       },
     })
