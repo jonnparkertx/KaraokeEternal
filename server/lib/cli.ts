@@ -35,6 +35,11 @@ const env = {
   KES_SERVER_CONSOLE_LEVEL: parseInt(process.env.KES_SERVER_CONSOLE_LEVEL, 10) || undefined,
   KES_SERVER_LOG_LEVEL: parseInt(process.env.KES_SERVER_LOG_LEVEL, 10) || undefined,
   KES_URL_PATH: process.env.KES_URL_PATH || '/',
+  // Bonjour / mDNS LAN advertise for Apple TV discovery (default on)
+  KES_BONJOUR: process.env.KES_BONJOUR
+    ? !['0', 'false'].includes(process.env.KES_BONJOUR.toLowerCase())
+    : true,
+  KES_BONJOUR_NAME: process.env.KES_BONJOUR_NAME?.trim() || undefined,
   // support PUID/PGID convention
   KES_PUID: parseInt(process.env.PUID, 10) || undefined,
   KES_PGID: parseInt(process.env.PGID, 10) || undefined,
@@ -85,6 +90,15 @@ const argv = yargs(hideBin(process.argv))
     requiresArg: true,
     type: 'string',
   })
+  .option('bonjour', {
+    describe: 'Advertise on LAN via Bonjour/mDNS (_karaokeeternal._tcp). Default on; set false/0 to disable',
+    type: 'boolean',
+  })
+  .option('bonjourName', {
+    describe: 'Bonjour service instance name (default=hostname)',
+    requiresArg: true,
+    type: 'string',
+  })
   .option('v', {
     alias: 'version',
     describe: 'Output the Karaoke Eternal Server version and exit',
@@ -113,6 +127,8 @@ const opts = {
   serverConsoleLevel: 'KES_SERVER_CONSOLE_LEVEL',
   serverLogLevel: 'KES_SERVER_LOG_LEVEL',
   urlPath: 'KES_URL_PATH',
+  bonjour: 'KES_BONJOUR',
+  bonjourName: 'KES_BONJOUR_NAME',
 }
 
 for (const opt in opts) {

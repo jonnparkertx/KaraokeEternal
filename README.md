@@ -20,6 +20,7 @@ Host awesome karaoke parties where everyone can easily find and queue songs from
 - Dynamic queues keep parties fair, fun and no-fuss
 - Fully self-hosted
 - No ads or telemetry
+- LAN Bonjour/mDNS advertise (`_karaokeeternal._tcp`) for Apple TV discovery (disable with `KES_BONJOUR=0`)
 
 Microphones are *not* required since the player itself only outputs music - this allows your audio setup to be as simple or complex as you like. See the [F.A.Q.](https://www.karaoke-eternal.com/faq/#recommended-audio-microphone-setup) for more information.
 
@@ -48,3 +49,10 @@ Make sure you have [Node.js](https://nodejs.org/en/) v24 or later, then:
 1. Fork and clone the repo
 2. `npm i`
 3. `npm run dev` and look for "Web server running at" for the **server URL**
+
+### Bonjour / Apple TV discovery
+
+On listen, the server advertises `_karaokeeternal._tcp` with TXT fields `path`, `scheme`, `ver`, and `name` so the [Apple TV player](https://github.com/jonnparkertx/Karaoke-Eternal-AppleTV-Player) can find it on the LAN.
+
+- Disable: `KES_BONJOUR=0` or `--bonjour false`
+- Instance name: `KES_BONJOUR_NAME=My Karaoke` or `--bonjourName "My Karaoke"`
