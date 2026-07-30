@@ -9,6 +9,7 @@ import {
   PLAYER_CMD_PLAY,
   PLAYER_CMD_REPLAY,
   PLAYER_CMD_VOLUME,
+  PLAYER_CMD_COMMENT,
   PLAYER_EMIT_LEAVE,
   PLAYER_EMIT_STATUS,
   PLAYER_ERROR,
@@ -37,6 +38,17 @@ const playerCmdOptions = createAction<{
   cdgSize: number
   mp4Alpha: number
 }>(PLAYER_CMD_OPTIONS)
+
+export interface SongComment {
+  text: string
+  queueId: number
+  userId: number
+  userDisplayName: string
+  userDateUpdated: number
+  id: number
+}
+
+const playerCmdComment = createAction<SongComment>(PLAYER_CMD_COMMENT)
 
 // ------------------------------------
 // Actions for emitting to room
@@ -116,6 +128,7 @@ export interface PlayerState {
   _isPlayingNext: boolean
   _isReplayingQueueId: number | null
   _lastReplayTime: number
+  _songComments: SongComment[]
 }
 
 const initialState: PlayerState = {
@@ -141,6 +154,7 @@ const initialState: PlayerState = {
   _isPlayingNext: false,
   _isReplayingQueueId: null,
   _lastReplayTime: 0,
+  _songComments: [],
 }
 
 const playerReducer = createReducer(initialState, (builder) => {
@@ -167,6 +181,12 @@ const playerReducer = createReducer(initialState, (builder) => {
     .addCase(playerCmdVolume, (state, { payload }) => {
       state.volume = payload
     })
+    .addCase(playerCmdComment, (state, { payload }) => {
+      // only show comments aimed at the currently playing queue item
+      if (payload.queueId === state.queueId && !state.isAtQueueEnd) {
+        state._songComments.push(payload)
+      }
+    })
     .addCase(playerError, (state, { payload }) => ({
       ...state,
       errorMessage: payload,
@@ -179,14 +199,25 @@ const playerReducer = createReducer(initialState, (builder) => {
       errorMessage: '',
       isErrored: false,
       _isFetching: true,
+      _songComments: [],
     }))
     .addCase(playerPlay, (state) => {
       state._isFetching = false
     })
-    .addCase(playerUpdate, (state, { payload }) => ({
-      ...state,
-      ...payload,
-    }))
+    .addCase(playerUpdate, (state, { payload }) => {
+      const update = payload as Partial<PlayerState>
+      const next = {
+        ...state,
+        ...update,
+      }
+
+      // clear comments when the queue item changes
+      if (typeof update.queueId === 'number' && update.queueId !== state.queueId) {
+        next._songComments = []
+      }
+
+      return next
+    })
 })
 
 export default playerReducer

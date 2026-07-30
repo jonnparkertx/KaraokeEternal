@@ -1,0 +1,73 @@
+.container {
+  position: absolute;
+  bottom: 28%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.left {
+  left: 2vh;
+}
+
+.right {
+  right: 2vh;
+}
+
+.bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5vh;
+  max-width: min(38vw, 26rem);
+  padding: 1.5vh 2vh;
+  background-color: hsla(var(--hue-blue), 100%, 5%, 0.88);
+  border: 1px solid var(--chrome-border-color);
+  box-shadow: var(--box-shadow);
+}
+
+.left .bubble {
+  border-radius: var(--border-radius) var(--border-radius) var(--border-radius) 0.35em;
+}
+
+.right .bubble {
+  border-radius: var(--border-radius) var(--border-radius) 0.35em var(--border-radius);
+}
+
+@supports (backdrop-filter: blur(20px) brightness(50%) saturate(50%)) or (-webkit-backdrop-filter: blur(20px) brightness(50%) saturate(50%)) {
+  .bubble {
+    background-color: hsla(var(--hue-blue), 100%, 5%, 0.78) !important;
+    -webkit-backdrop-filter: blur(20px) brightness(45%) saturate(55%);
+    backdrop-filter: blur(20px) brightness(45%) saturate(55%);
+  }
+}
+
+.userImage {
+  flex-shrink: 0;
+  width: 6vh;
+  height: 6vh;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.body {
+  min-width: 0;
+}
+
+.name {
+  font-size: 2.2vh;
+  font-weight: var(--font-weight-bold);
+  text-shadow: var(--text-shadow);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text {
+  margin-top: 0.4vh;
+  font-size: 2.8vh;
+  line-height: 1.25;
+  text-shadow: var(--text-shadow);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

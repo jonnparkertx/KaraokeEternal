@@ -7,6 +7,7 @@ import {
   PLAYER_REQ_PAUSE,
   PLAYER_REQ_REPLAY,
   PLAYER_REQ_VOLUME,
+  PLAYER_REQ_COMMENT,
   PLAYER_STATUS,
   PLAYER_LEAVE,
 } from 'shared/actionTypes'
@@ -43,6 +44,10 @@ export const requestOptions = createAction(PLAYER_REQ_OPTIONS, (opts: PlaybackOp
       leading: true,
     },
   },
+}))
+
+export const requestComment = createAction(PLAYER_REQ_COMMENT, (payload: { text: string, queueId: number }) => ({
+  payload,
 }))
 
 // ------------------------------------
