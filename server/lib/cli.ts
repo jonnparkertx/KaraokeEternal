@@ -40,6 +40,9 @@ const env = {
     ? !['0', 'false'].includes(process.env.KES_BONJOUR.toLowerCase())
     : true,
   KES_BONJOUR_NAME: process.env.KES_BONJOUR_NAME?.trim() || undefined,
+  // Reachable LAN host/port for Bonjour (required in Docker bridge — container IP is not LAN-reachable)
+  KES_BONJOUR_HOST: process.env.KES_BONJOUR_HOST?.trim() || undefined,
+  KES_BONJOUR_PORT: parseInt(process.env.KES_BONJOUR_PORT, 10) || undefined,
   // support PUID/PGID convention
   KES_PUID: parseInt(process.env.PUID, 10) || undefined,
   KES_PGID: parseInt(process.env.PGID, 10) || undefined,
@@ -99,6 +102,16 @@ const argv = yargs(hideBin(process.argv))
     requiresArg: true,
     type: 'string',
   })
+  .option('bonjourHost', {
+    describe: 'Host/IP advertised via Bonjour (use NAS LAN IP or .local name when running in Docker)',
+    requiresArg: true,
+    type: 'string',
+  })
+  .option('bonjourPort', {
+    describe: 'Port advertised via Bonjour (use published host port when it differs from container listen port)',
+    number: true,
+    requiresArg: true,
+  })
   .option('v', {
     alias: 'version',
     describe: 'Output the Karaoke Eternal Server version and exit',
@@ -129,6 +142,8 @@ const opts = {
   urlPath: 'KES_URL_PATH',
   bonjour: 'KES_BONJOUR',
   bonjourName: 'KES_BONJOUR_NAME',
+  bonjourHost: 'KES_BONJOUR_HOST',
+  bonjourPort: 'KES_BONJOUR_PORT',
 }
 
 for (const opt in opts) {

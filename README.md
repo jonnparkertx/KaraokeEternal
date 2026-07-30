@@ -55,4 +55,9 @@ Make sure you have [Node.js](https://nodejs.org/en/) v24 or later, then:
 On listen, the server advertises `_karaokeeternal._tcp` with TXT fields `path`, `scheme`, `ver`, and `name` so the [Apple TV player](https://github.com/jonnparkertx/Karaoke-Eternal-AppleTV-Player) can find it on the LAN.
 
 - Disable: `KES_BONJOUR=0` or `--bonjour false`
-- Instance name: `KES_BONJOUR_NAME=My Karaoke` or `--bonjourName "My Karaoke"`
+- Instance name: `KES_BONJOUR_NAME=JonnCloud` or `--bonjourName "JonnCloud"`
+- **Docker / Portainer (bridge networking):** the container IP (`172.x`) is not reachable from an Apple TV. Set:
+  - `KES_BONJOUR_HOST=192.168.1.10` (or `jonncloud.local`) — your NAS LAN address
+  - `KES_BONJOUR_PORT=8981` — the **published** host port if it differs from the container listen port
+
+Confirm with: `dns-sd -L "JonnCloud" _karaokeeternal._tcp local.` — the host must be a LAN IP/name, not `172.x`.
