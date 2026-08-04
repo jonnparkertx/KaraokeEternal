@@ -180,6 +180,32 @@ class Media {
 
     return songId
   }
+
+  /**
+   * Set isCorruptedCdg flag for a given media item
+   */
+  static setCorruptedCdg (mediaId: number, isCorruptedCdg: boolean): number {
+    if (!Number.isInteger(mediaId) || typeof isCorruptedCdg !== 'boolean') {
+      throw new Error('invalid mediaId or value')
+    }
+
+    const res = Media.search({ mediaId })
+
+    if (!res.result.length) {
+      throw new Error(`mediaId not found: ${mediaId}`)
+    }
+
+    const songId = res.entities[mediaId].songId
+
+    if (isCorruptedCdg) {
+      // clear preferred so selection can fall through to another file
+      Media.update({ mediaId, isCorruptedCdg: 1, isPreferred: 0 })
+    } else {
+      Media.update({ mediaId, isCorruptedCdg: 0 })
+    }
+
+    return songId
+  }
 }
 
 export default Media

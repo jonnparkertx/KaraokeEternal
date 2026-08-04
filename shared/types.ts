@@ -123,9 +123,12 @@ export interface Media {
   songId: number
   mediaId: number
   isPreferred: boolean
+  isCorruptedCdg?: boolean
   path: string
   relPath: string
   duration: number
+  rgTrackGain?: number | null
+  rgTrackPeak?: number | null
 }
 
 export interface Prefs {

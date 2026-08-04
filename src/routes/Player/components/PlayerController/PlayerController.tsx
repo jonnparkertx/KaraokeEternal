@@ -21,6 +21,15 @@ const PlayerController = (props: PlayerControllerProps) => {
   const roomPrefs = useAppSelector(getRoomPrefs)
   const queueItem = queue.entities[player.queueId]
   const nextQueueItem = queue.entities[queue.result[queue.result.indexOf(player.queueId) + 1]]
+  const mediaId = player._mediaIdOverride ?? queueItem?.mediaId ?? null
+  const mediaType = player._mediaTypeOverride ?? queueItem?.mediaType ?? null
+  const rgTrackGain = player._mediaIdOverride !== null
+    ? player._rgTrackGainOverride
+    : (queueItem ? queueItem.rgTrackGain : null)
+  const rgTrackPeak = player._mediaIdOverride !== null
+    ? player._rgTrackPeakOverride
+    : (queueItem ? queueItem.rgTrackPeak : null)
+  const mediaKey = queueItem && typeof mediaId === 'number' ? `${queueItem.queueId}:${mediaId}` : null
 
   const dispatch = useAppDispatch()
   const handleStatus = useCallback((status?: Partial<PlayerState>) => dispatch(playerStatus(status)), [dispatch])
@@ -48,6 +57,7 @@ const PlayerController = (props: PlayerControllerProps) => {
       isAtQueueEnd: false,
       isPlaying: true,
       isVideoKeyingEnabled: nextItem.isVideoKeyingEnabled,
+      mediaId: nextItem.mediaId,
       mediaType: nextItem.mediaType,
       position: 0,
       queueId: nextItem.queueId,
@@ -69,6 +79,7 @@ const PlayerController = (props: PlayerControllerProps) => {
       handleStatus({
         historyJSON: JSON.stringify(history),
         isAtQueueEnd: true,
+        mediaId: null,
         mediaType: null,
         _isPlayingNext: false,
       })
@@ -82,6 +93,7 @@ const PlayerController = (props: PlayerControllerProps) => {
       isAtQueueEnd: false,
       isPlaying: true,
       isVideoKeyingEnabled: nextQueueItem.isVideoKeyingEnabled,
+      mediaId: nextQueueItem.mediaId,
       mediaType: nextQueueItem.mediaType,
       position: 0,
       queueId: nextQueueItem.queueId,
@@ -103,8 +115,14 @@ const PlayerController = (props: PlayerControllerProps) => {
   }, [handleStatus, nextQueueItem, player.nextUserId, queue, queueItem])
 
   // always emit status when any of these change
-  useEffect(() => handleStatus({ isVideoKeyingEnabled: queueItem?.isVideoKeyingEnabled }), [
+  useEffect(() => handleStatus({
+    isVideoKeyingEnabled: queueItem?.isVideoKeyingEnabled,
+    mediaId,
+    mediaType,
+  }), [
     handleStatus,
+    mediaId,
+    mediaType,
     player.cdgAlpha,
     player.cdgSize,
     player.isPlaying,
@@ -155,18 +173,19 @@ const PlayerController = (props: PlayerControllerProps) => {
         isReplayGainEnabled={prefs.isReplayGainEnabled}
         isVideoKeyingEnabled={!!queueItem?.isVideoKeyingEnabled}
         isWebGLSupported={player.isWebGLSupported}
-        mediaId={queueItem ? queueItem.mediaId : null}
-        mediaKey={queueItem ? queueItem.queueId : null}
+        mediaId={mediaId}
+        mediaKey={mediaKey}
         mediaReplayKey={player._lastReplayTime}
-        mediaType={queueItem ? queueItem.mediaType : null}
+        mediaType={mediaType}
         mp4Alpha={player.mp4Alpha}
         onEnd={handleLoadNext}
         onError={handleError}
         onLoad={handleLoad}
         onPlay={handlePlay}
         onStatus={handleStatus}
-        rgTrackGain={queueItem ? queueItem.rgTrackGain : null}
-        rgTrackPeak={queueItem ? queueItem.rgTrackPeak : null}
+        rgTrackGain={rgTrackGain}
+        rgTrackPeak={rgTrackPeak}
+        startPosition={player._seekAfterLoad}
         visualizer={playerVisualizer}
         volume={player.volume}
         width={props.width}

@@ -104,11 +104,14 @@ class Library {
     const { result, entities } = Media.search({ songId })
     if (!result.length) return {}
 
+    const selectable = result.filter(mediaId => !entities[mediaId].isCorruptedCdg)
+    const candidates = selectable.length ? selectable : result
+
     // should be in order of path priority...
-    let media = entities[result[0]]
+    let media = entities[candidates[0]]
 
     // ...but are any preferred?
-    for (const mediaId of result) {
+    for (const mediaId of candidates) {
       if (entities[mediaId].isPreferred) media = entities[mediaId]
     }
 

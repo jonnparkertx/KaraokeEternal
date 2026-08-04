@@ -4,8 +4,9 @@ import styles from './MP4Player.css'
 interface MP4PlayerProps {
   isPlaying: boolean
   mediaId: number
-  mediaKey: number
+  mediaKey: string | number
   mediaReplayKey?: number
+  startPosition?: number | null
   width: number
   height: number
   onAudioElement(video: HTMLVideoElement): void
@@ -14,7 +15,7 @@ interface MP4PlayerProps {
   onError(error: string): void
   onLoad(): void
   onPlay(): void
-  onStatus(status: { position: number }): void
+  onStatus(status: { position?: number, _seekAfterLoad?: null }): void
 }
 
 class MP4Player extends React.Component<MP4PlayerProps> {
@@ -69,6 +70,11 @@ class MP4Player extends React.Component<MP4PlayerProps> {
 
   updateIsPlaying = () => {
     if (!this.video.current) return
+
+    if (typeof this.props.startPosition === 'number') {
+      this.video.current.currentTime = this.props.startPosition
+      this.props.onStatus({ _seekAfterLoad: null })
+    }
 
     if (this.props.isPlaying) {
       this.video.current.play()

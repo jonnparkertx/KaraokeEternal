@@ -8,6 +8,7 @@ import {
   PLAYER_REQ_REPLAY,
   PLAYER_REQ_VOLUME,
   PLAYER_REQ_COMMENT,
+  PLAYER_REQ_PLAY_MEDIA,
   PLAYER_STATUS,
   PLAYER_LEAVE,
 } from 'shared/actionTypes'
@@ -50,10 +51,18 @@ export const requestComment = createAction(PLAYER_REQ_COMMENT, (payload: { text:
   payload,
 }))
 
+export const requestPlayMedia = createAction(PLAYER_REQ_PLAY_MEDIA, (payload: {
+  mediaId: number
+  mediaType: MediaType
+  fromStart: boolean
+}) => ({
+  payload,
+}))
+
 // ------------------------------------
 // Reducer
 // ------------------------------------
-interface StatusState {
+export interface StatusState {
   cdgAlpha: number
   cdgSize: number
   errorMessage: string
@@ -64,6 +73,7 @@ interface StatusState {
   isPlaying: boolean
   isVideoKeyingEnabled: boolean
   isWebGLSupported: boolean
+  mediaId: number | null
   mediaType: MediaType | null
   mp4Alpha: number
   nextUserId: number | null
@@ -84,6 +94,7 @@ const initialState: StatusState = {
   isPlaying: false,
   isVideoKeyingEnabled: false,
   isWebGLSupported: false,
+  mediaId: null,
   mediaType: null,
   mp4Alpha: 1,
   nextUserId: null,

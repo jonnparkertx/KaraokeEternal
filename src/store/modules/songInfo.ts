@@ -3,6 +3,7 @@ import HttpApi from 'lib/HttpApi'
 import {
   SONG_INFO_REQUEST,
   SONG_INFO_SET_PREFERRED,
+  SONG_INFO_SET_CORRUPTED,
   SONG_INFO_CLOSE,
 } from 'shared/actionTypes'
 import { Media } from 'shared/types'
@@ -31,10 +32,22 @@ export const setPreferredSong = createAsyncThunk(
   },
 )
 
+export const setCorruptedCdg = createAsyncThunk(
+  SONG_INFO_SET_CORRUPTED,
+  async ({
+    songId,
+    mediaId,
+    isCorruptedCdg,
+  }: Pick<Media, 'songId' | 'mediaId'> & { isCorruptedCdg: boolean }, thunkAPI) => {
+    await api.request(isCorruptedCdg ? 'PUT' : 'DELETE', `media/${mediaId}/corrupted`)
+    thunkAPI.dispatch(showSongInfo(songId))
+  },
+)
+
 // ------------------------------------
 // Reducer
 // ------------------------------------
-interface SongInfoState {
+export interface SongInfoState {
   isLoading: boolean
   isVisible: boolean
   songId: number | null

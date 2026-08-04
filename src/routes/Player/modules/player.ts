@@ -10,6 +10,7 @@ import {
   PLAYER_CMD_REPLAY,
   PLAYER_CMD_VOLUME,
   PLAYER_CMD_COMMENT,
+  PLAYER_CMD_PLAY_MEDIA,
   PLAYER_EMIT_LEAVE,
   PLAYER_EMIT_STATUS,
   PLAYER_ERROR,
@@ -18,6 +19,7 @@ import {
   PLAYER_UPDATE,
   REDUX_SLICE_INJECT_NOOP,
 } from 'shared/actionTypes'
+import type { MediaType } from 'shared/types'
 
 // internal use
 export const playerUpdate = createAction<object>(PLAYER_UPDATE)
@@ -49,6 +51,13 @@ export interface SongComment {
 }
 
 const playerCmdComment = createAction<SongComment>(PLAYER_CMD_COMMENT)
+const playerCmdPlayMedia = createAction<{
+  mediaId: number
+  mediaType: MediaType
+  fromStart: boolean
+  rgTrackGain: number | null
+  rgTrackPeak: number | null
+}>(PLAYER_CMD_PLAY_MEDIA)
 
 // ------------------------------------
 // Actions for emitting to room
@@ -116,6 +125,7 @@ export interface PlayerState {
   isPlaying: boolean
   isVideoKeyingEnabled: boolean
   isWebGLSupported: boolean
+  mediaId: number | null
   mediaType: string | null
   mp4Alpha: number
   nextUserId: number | null
@@ -128,6 +138,11 @@ export interface PlayerState {
   _isPlayingNext: boolean
   _isReplayingQueueId: number | null
   _lastReplayTime: number
+  _mediaIdOverride: number | null
+  _mediaTypeOverride: MediaType | null
+  _rgTrackGainOverride: number | null
+  _rgTrackPeakOverride: number | null
+  _seekAfterLoad: number | null
   _songComments: SongComment[]
 }
 
@@ -141,6 +156,7 @@ const initialState: PlayerState = {
   isPlaying: false,
   isVideoKeyingEnabled: false,
   isWebGLSupported: getWebGLSupport(),
+  mediaId: null,
   mediaType: null,
   mp4Alpha: 0.5,
   nextUserId: null,
@@ -154,6 +170,11 @@ const initialState: PlayerState = {
   _isPlayingNext: false,
   _isReplayingQueueId: null,
   _lastReplayTime: 0,
+  _mediaIdOverride: null,
+  _mediaTypeOverride: null,
+  _rgTrackGainOverride: null,
+  _rgTrackPeakOverride: null,
+  _seekAfterLoad: null,
   _songComments: [],
 }
 
@@ -177,6 +198,20 @@ const playerReducer = createReducer(initialState, (builder) => {
     .addCase(playerCmdReplay, (state, { payload }) => {
       state._isReplayingQueueId = payload.queueId
       state._lastReplayTime = Date.now()
+    })
+    .addCase(playerCmdPlayMedia, (state, { payload }) => {
+      if (state.queueId === -1 || state.isAtQueueEnd) return
+
+      state._mediaIdOverride = payload.mediaId
+      state._mediaTypeOverride = payload.mediaType
+      state._rgTrackGainOverride = payload.rgTrackGain
+      state._rgTrackPeakOverride = payload.rgTrackPeak
+      state._seekAfterLoad = payload.fromStart ? 0 : state.position
+      state.isPlaying = true
+      state.isErrored = false
+      state.errorMessage = ''
+      state.mediaId = payload.mediaId
+      state.mediaType = payload.mediaType
     })
     .addCase(playerCmdVolume, (state, { payload }) => {
       state.volume = payload
@@ -211,9 +246,14 @@ const playerReducer = createReducer(initialState, (builder) => {
         ...update,
       }
 
-      // clear comments when the queue item changes
+      // clear comments and media override when the queue item changes
       if (typeof update.queueId === 'number' && update.queueId !== state.queueId) {
         next._songComments = []
+        next._mediaIdOverride = null
+        next._mediaTypeOverride = null
+        next._rgTrackGainOverride = null
+        next._rgTrackPeakOverride = null
+        next._seekAfterLoad = null
       }
 
       return next
