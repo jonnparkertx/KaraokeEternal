@@ -27,6 +27,7 @@ import socketActions from './socket.js'
 import IPC from './lib/IPCBridge.js'
 import IPCLibraryActions from './Library/ipc.js'
 import IPCMediaActions from './Media/ipc.js'
+import { startBonjourAdvertise } from './lib/bonjourAdvertise.js'
 import { SCANNER_WORKER_EXITED, SERVER_WORKER_STATUS, SERVER_WORKER_ERROR } from '../shared/actionTypes.js'
 
 const log = getLogger('server')
@@ -69,11 +70,15 @@ async function serverWorker ({ env, startScanner, stopScanner, shutdownHandlers 
     IPC.use(IPCLibraryActions(io))
     IPC.use(IPCMediaActions(io))
 
+    let bonjourHandle: ReturnType<typeof startBonjourAdvertise> = null
+
     // success callback in 3rd arg
     server.listen(env.KES_PORT, () => {
       const port = server.address().port
       const url = `http://${getIPAddress()}${port === 80 ? '' : ':' + port}${urlPath}`
       log.info(`Web server running at ${url}`)
+
+      bonjourHandle = startBonjourAdvertise(env, port)
 
       process.emit('serverWorker', {
         type: SERVER_WORKER_STATUS,
@@ -90,6 +95,12 @@ async function serverWorker ({ env, startScanner, stopScanner, shutdownHandlers 
     })
 
     // handle shutdown gracefully
+    shutdownHandlers.push(async () => {
+      if (bonjourHandle) {
+        await bonjourHandle.stop()
+        bonjourHandle = null
+      }
+    })
     shutdownHandlers.push(() => new Promise((resolve) => {
       // also calls http server's close method, which ultimately handles the callback
       io.close(resolve)

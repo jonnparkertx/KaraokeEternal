@@ -20,3 +20,15 @@
   font-weight: bold;
   color: #777;
 }
+
+.actionButton {
+  margin-top: 0.35em;
+  cursor: pointer;
+}
+
+.playNowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

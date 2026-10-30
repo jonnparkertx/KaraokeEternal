@@ -111,4 +111,34 @@ router.all('/:mediaId/prefer', (ctx) => {
   })
 })
 
+// set isCorruptedCdg flag
+router.all('/:mediaId/corrupted', (ctx) => {
+  if (!ctx.user.isAdmin) {
+    ctx.throw(401)
+  }
+
+  const mediaId = parseInt(ctx.params.mediaId, 10)
+
+  if (Number.isNaN(mediaId) || (ctx.request.method !== 'PUT' && ctx.request.method !== 'DELETE')) {
+    ctx.throw(422)
+  }
+
+  const songId = Media.setCorruptedCdg(mediaId, ctx.request.method === 'PUT')
+  ctx.status = 200
+
+  // emit (potentially) updated queues to each room
+  for (const { room, roomId } of Rooms.getActive(ctx.io)) {
+    ctx.io.to(room).emit('action', {
+      type: QUEUE_PUSH,
+      payload: Queue.get(roomId),
+    })
+  }
+
+  // emit (potentially) new duration
+  ctx.io.emit('action', {
+    type: LIBRARY_PUSH_SONG,
+    payload: Library.getSong(songId),
+  })
+})
+
 export default router

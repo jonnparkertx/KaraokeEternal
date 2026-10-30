@@ -8,9 +8,10 @@ const BORDER_RADIUS = parseInt(getComputedStyle(document.body).getPropertyValue(
 interface MP4AlphaPlayerProps {
   isPlaying: boolean
   mediaId: number
-  mediaKey: number
+  mediaKey: string | number
   mediaReplayKey?: number
   mp4Alpha: number
+  startPosition?: number | null
   width: number
   height: number
   onAudioElement(video: HTMLVideoElement): void
@@ -19,7 +20,7 @@ interface MP4AlphaPlayerProps {
   onError(error: string): void
   onLoad(): void
   onPlay(): void
-  onStatus(status: { position: number }): void
+  onStatus(status: { position?: number, _seekAfterLoad?: null }): void
 }
 
 class MP4AlphaPlayer extends React.Component<MP4AlphaPlayerProps> {
@@ -27,6 +28,7 @@ class MP4AlphaPlayer extends React.Component<MP4AlphaPlayerProps> {
   frameId: number | null = null
   video = document.createElement('video')
   chroma: GLChroma
+  pendingSeek: number | null = null
   supportsFilters = CSS.supports('backdrop-filter', 'blur(10px) brightness(100%) saturate(100%)') || CSS.supports('-webkit-backdrop-filter', 'blur(10px) brightness(100%) saturate(100%)')
   state = {
     contentBounds: [0, 0, 0, 0], // x1, y1, x2, y2
@@ -144,11 +146,20 @@ class MP4AlphaPlayer extends React.Component<MP4AlphaPlayerProps> {
 
   updateSources = () => {
     this.stopChroma()
+    this.pendingSeek = typeof this.props.startPosition === 'number' ? this.props.startPosition : null
     this.video.src = `${document.baseURI}api/media/${this.props.mediaId}?type=video`
     this.video.load()
   }
 
   updateIsPlaying = () => {
+    // Apply seek once after a source load — never on pause/play toggles.
+    if (this.pendingSeek !== null) {
+      const seek = this.pendingSeek
+      this.pendingSeek = null
+      this.video.currentTime = seek
+      this.props.onStatus({ _seekAfterLoad: null })
+    }
+
     if (this.props.isPlaying) {
       this.video.play()
         .catch(err => this.props.onError(err.message))

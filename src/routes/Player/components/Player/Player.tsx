@@ -16,12 +16,13 @@ interface PlayerProps {
   isVideoKeyingEnabled: boolean
   isWebGLSupported: boolean
   mediaId: number
-  mediaKey: number
+  mediaKey: string | number
   mediaReplayKey?: number
   mediaType?: string
   mp4Alpha: number
   rgTrackGain?: number
   rgTrackPeak?: number
+  startPosition?: number | null
   visualizer: PlayerVisualizerState
   volume: number
   width: number
@@ -117,7 +118,7 @@ class Player extends React.Component<PlayerProps> {
   render () {
     if (!this.props.isVisible || typeof this.props.mediaId !== 'number') return null
 
-    let PlayerComponent
+    let PlayerComponent: React.ComponentType<any> | undefined
 
     if (this.props.mediaType === 'cdg') PlayerComponent = CDGPlayer
     else if (this.props.mediaType === 'mp4') PlayerComponent = this.props.isVideoKeyingEnabled ? MP4AlphaPlayer : MP4Player

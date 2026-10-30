@@ -31,6 +31,7 @@ export const PLAYER_CMD_PLAY = 'player/CMD_PLAY'
 export const PLAYER_CMD_REPLAY = 'player/CMD_REPLAY'
 export const PLAYER_CMD_VOLUME = 'player/CMD_VOLUME'
 export const PLAYER_CMD_COMMENT = 'player/CMD_COMMENT'
+export const PLAYER_CMD_PLAY_MEDIA = 'player/CMD_PLAY_MEDIA'
 
 export const PLAYER_REQ_NEXT = 'server/PLAYER_REQ_NEXT'
 export const PLAYER_REQ_OPTIONS = 'server/PLAYER_REQ_OPTIONS'
@@ -39,6 +40,7 @@ export const PLAYER_REQ_PLAY = 'server/PLAYER_REQ_PLAY'
 export const PLAYER_REQ_REPLAY = 'server/PLAYER_REQ_REPLAY'
 export const PLAYER_REQ_VOLUME = 'server/PLAYER_REQ_VOLUME'
 export const PLAYER_REQ_COMMENT = 'server/PLAYER_REQ_COMMENT'
+export const PLAYER_REQ_PLAY_MEDIA = 'server/PLAYER_REQ_PLAY_MEDIA'
 export const PLAYER_EMIT_STATUS = 'server/PLAYER_EMIT_STATUS'
 export const PLAYER_EMIT_LEAVE = 'server/PLAYER_EMIT_LEAVE'
 
@@ -105,6 +107,7 @@ export const UI_WINDOW_RESIZE = 'ui/WINDOW_RESIZE'
 // Song Info
 export const SONG_INFO_REQUEST = 'songInfo/SONG_INFO_REQUEST'
 export const SONG_INFO_SET_PREFERRED = 'songInfo/SET_PREFERRED'
+export const SONG_INFO_SET_CORRUPTED = 'songInfo/SET_CORRUPTED'
 export const SONG_INFO_CLOSE = 'songInfo/SONG_INFO_CLOSE'
 
 // IPC Messages

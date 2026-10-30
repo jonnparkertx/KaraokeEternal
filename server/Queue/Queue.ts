@@ -54,6 +54,14 @@ class Queue {
         INNER JOIN media USING(songId)
         INNER JOIN paths USING(pathId)
       WHERE roomId = ${roomId}
+        AND (
+          media.isCorruptedCdg = 0
+          OR NOT EXISTS (
+            SELECT 1 FROM media AS nonCorrupted
+            WHERE nonCorrupted.songId = queue.songId
+              AND nonCorrupted.isCorruptedCdg = 0
+          )
+        )
       GROUP BY queueId
       ORDER BY queueId, paths.priority ASC
     `

@@ -4,8 +4,9 @@ import styles from './MP4Player.css'
 interface MP4PlayerProps {
   isPlaying: boolean
   mediaId: number
-  mediaKey: number
+  mediaKey: string | number
   mediaReplayKey?: number
+  startPosition?: number | null
   width: number
   height: number
   onAudioElement(video: HTMLVideoElement): void
@@ -14,11 +15,12 @@ interface MP4PlayerProps {
   onError(error: string): void
   onLoad(): void
   onPlay(): void
-  onStatus(status: { position: number }): void
+  onStatus(status: { position?: number, _seekAfterLoad?: null }): void
 }
 
 class MP4Player extends React.Component<MP4PlayerProps> {
   video = React.createRef<HTMLVideoElement>()
+  pendingSeek: number | null = null
 
   componentDidMount () {
     this.props.onAudioElement(this.video.current)
@@ -63,12 +65,21 @@ class MP4Player extends React.Component<MP4PlayerProps> {
 
   updateSources = () => {
     if (!this.video.current) return
+    this.pendingSeek = typeof this.props.startPosition === 'number' ? this.props.startPosition : null
     this.video.current.src = `${document.baseURI}api/media/${this.props.mediaId}?type=video`
     this.video.current.load()
   }
 
   updateIsPlaying = () => {
     if (!this.video.current) return
+
+    // Apply seek once after a source load — never on pause/play toggles.
+    if (this.pendingSeek !== null) {
+      const seek = this.pendingSeek
+      this.pendingSeek = null
+      this.video.current.currentTime = seek
+      this.props.onStatus({ _seekAfterLoad: null })
+    }
 
     if (this.props.isPlaying) {
       this.video.current.play()

@@ -13,8 +13,9 @@ interface CDGPlayerProps {
   cdgSize: number
   isPlaying: boolean
   mediaId: number
-  mediaKey: string
+  mediaKey: string | number
   mediaReplayKey?: number
+  startPosition?: number | null
   width: number
   height: number
   onAudioElement(video: HTMLAudioElement): void
@@ -23,7 +24,7 @@ interface CDGPlayerProps {
   onError(error: string): void
   onLoad(): void
   onPlay(): void
-  onStatus(status: { position: number }): void
+  onStatus(status: { position?: number, _seekAfterLoad?: null }): void
 }
 
 class CDGPlayer extends React.Component<CDGPlayerProps> {
@@ -33,6 +34,7 @@ class CDGPlayer extends React.Component<CDGPlayerProps> {
   cdg: CDGraphics = null
   frameId: number | null = null
   lastBitmap: ImageBitmap | null = null
+  pendingSeek: number | null = null
   supportsFilters = CSS.supports('backdrop-filter', 'blur(10px) brightness(100%) saturate(100%)') || CSS.supports('-webkit-backdrop-filter', 'blur(10px) brightness(100%) saturate(100%)')
 
   state = {
@@ -130,6 +132,7 @@ class CDGPlayer extends React.Component<CDGPlayerProps> {
 
   updateSources = async () => {
     this.stopCDG()
+    this.pendingSeek = typeof this.props.startPosition === 'number' ? this.props.startPosition : null
 
     // load .cdg file
     try {
@@ -150,6 +153,14 @@ class CDGPlayer extends React.Component<CDGPlayerProps> {
 
   updateIsPlaying = () => {
     if (!this.audio.current) return
+
+    // Apply seek once after a source load — never on pause/play toggles.
+    if (this.pendingSeek !== null) {
+      const seek = this.pendingSeek
+      this.pendingSeek = null
+      this.audio.current.currentTime = seek
+      this.props.onStatus({ _seekAfterLoad: null })
+    }
 
     if (this.props.isPlaying) {
       this.audio.current.play()
