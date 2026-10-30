@@ -18,6 +18,7 @@ const SongInfo = () => {
   const status = useAppSelector(state => state.status)
   const queue = useAppSelector(getRoundRobinQueue)
   const [playMediaId, setPlayMediaId] = useState<number | null>(null)
+  const [corruptMediaId, setCorruptMediaId] = useState<number | null>(null)
 
   const current = queue.entities[status.queueId]
   const canUsePlaybackActions = status.isPlaying
@@ -28,16 +29,16 @@ const SongInfo = () => {
   const dispatch = useAppDispatch()
   const handleCloseSongInfo = () => {
     setPlayMediaId(null)
+    setCorruptMediaId(null)
     dispatch(closeSongInfo())
   }
   const handlePrefer = (mediaId: number) => dispatch(setPreferredSong({ songId, mediaId, isPreferred: true }))
   const handleRemovePrefer = (mediaId: number) => dispatch(setPreferredSong({ songId, mediaId, isPreferred: false }))
 
-  const handleMarkCorrupted = (mediaId: number) => {
-    if (!window.confirm('Mark this CDG/media file as corrupted? It will not be selected for playback in the future.')) {
-      return
-    }
-    dispatch(setCorruptedCdg({ songId, mediaId, isCorruptedCdg: true }))
+  const handleConfirmCorrupted = () => {
+    if (corruptMediaId === null) return
+    dispatch(setCorruptedCdg({ songId, mediaId: corruptMediaId, isCorruptedCdg: true }))
+    setCorruptMediaId(null)
   }
 
   const handleUnmarkCorrupted = (mediaId: number) => {
@@ -106,7 +107,7 @@ const SongInfo = () => {
               : (
                   <span>
                     No&nbsp;
-                    <a onClick={() => handleMarkCorrupted(mediaId)}>(Set)</a>
+                    <a onClick={() => setCorruptMediaId(mediaId)}>(Set)</a>
                   </span>
                 )}
             {!isCurrentlyPlayingVersion && (
@@ -170,6 +171,27 @@ const SongInfo = () => {
               From beginning
             </Button>
             <Button onClick={() => setPlayMediaId(null)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        visible={corruptMediaId !== null}
+        onClose={() => setCorruptMediaId(null)}
+        title='Mark corrupted CDG?'
+      >
+        <div className={styles.container}>
+          <p>
+            Mark this CDG/media file as corrupted? It will not be selected for playback
+            in the future. The currently playing song will not be interrupted.
+          </p>
+          <div className={styles.playNowActions}>
+            <Button variant='danger' onClick={handleConfirmCorrupted}>
+              Mark corrupted
+            </Button>
+            <Button onClick={() => setCorruptMediaId(null)}>
               Cancel
             </Button>
           </div>

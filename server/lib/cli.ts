@@ -35,6 +35,14 @@ const env = {
   KES_SERVER_CONSOLE_LEVEL: parseInt(process.env.KES_SERVER_CONSOLE_LEVEL, 10) || undefined,
   KES_SERVER_LOG_LEVEL: parseInt(process.env.KES_SERVER_LOG_LEVEL, 10) || undefined,
   KES_URL_PATH: process.env.KES_URL_PATH || '/',
+  // Bonjour / mDNS LAN advertise for Apple TV discovery (default on)
+  KES_BONJOUR: process.env.KES_BONJOUR
+    ? !['0', 'false'].includes(process.env.KES_BONJOUR.toLowerCase())
+    : true,
+  KES_BONJOUR_NAME: process.env.KES_BONJOUR_NAME?.trim() || undefined,
+  // Reachable LAN host/port for Bonjour (required in Docker bridge — container IP is not LAN-reachable)
+  KES_BONJOUR_HOST: process.env.KES_BONJOUR_HOST?.trim() || undefined,
+  KES_BONJOUR_PORT: parseInt(process.env.KES_BONJOUR_PORT, 10) || undefined,
   // support PUID/PGID convention
   KES_PUID: parseInt(process.env.PUID, 10) || undefined,
   KES_PGID: parseInt(process.env.PGID, 10) || undefined,
@@ -85,6 +93,25 @@ const argv = yargs(hideBin(process.argv))
     requiresArg: true,
     type: 'string',
   })
+  .option('bonjour', {
+    describe: 'Advertise on LAN via Bonjour/mDNS (_karaokeeternal._tcp). Default on; set false/0 to disable',
+    type: 'boolean',
+  })
+  .option('bonjourName', {
+    describe: 'Bonjour service instance name (default=hostname)',
+    requiresArg: true,
+    type: 'string',
+  })
+  .option('bonjourHost', {
+    describe: 'Host/IP advertised via Bonjour (use NAS LAN IP or .local name when running in Docker)',
+    requiresArg: true,
+    type: 'string',
+  })
+  .option('bonjourPort', {
+    describe: 'Port advertised via Bonjour (use published host port when it differs from container listen port)',
+    number: true,
+    requiresArg: true,
+  })
   .option('v', {
     alias: 'version',
     describe: 'Output the Karaoke Eternal Server version and exit',
@@ -113,6 +140,10 @@ const opts = {
   serverConsoleLevel: 'KES_SERVER_CONSOLE_LEVEL',
   serverLogLevel: 'KES_SERVER_LOG_LEVEL',
   urlPath: 'KES_URL_PATH',
+  bonjour: 'KES_BONJOUR',
+  bonjourName: 'KES_BONJOUR_NAME',
+  bonjourHost: 'KES_BONJOUR_HOST',
+  bonjourPort: 'KES_BONJOUR_PORT',
 }
 
 for (const opt in opts) {

@@ -6,10 +6,20 @@ import { db } from '../lib/Database.js'
 import getLogger from '../lib/Log.js'
 import Rooms, { STATUSES } from '../Rooms/Rooms.js'
 import Prefs, { LOGO_MAX_LENGTH, qrWatermarkKey } from '../Prefs/Prefs.js'
+import {
+  CDG_VIDEO_MAX_BYTES,
+  cdgVideoFile,
+  clearCdgVideo,
+  extensionFor,
+  isQuickTimeContainer,
+  readFileHeader,
+  saveCdgVideo,
+} from './cdgVideo.js'
 import { ValidationError } from '../lib/Errors.js'
 
 interface File {
   filepath: string
+  originalFilename?: string
   size: number
 }
 
@@ -135,6 +145,7 @@ router.delete('/:roomId', (ctx) => {
   log.verbose('%s deleted roomId %s', ctx.user.name, roomId)
 
   Prefs.clearBrandingImage(qrWatermarkKey(roomId))
+  clearCdgVideo(roomId)
 
   // send updated room list
   ctx.body = Rooms.get(null, { status: STATUSES })
@@ -263,6 +274,140 @@ router.delete('/:roomId/qr-watermark', async (ctx) => {
   }
 
   ctx.body = { watermarkDateUpdated: null, prefs }
+})
+
+// stream the room CD+G backdrop video (admin player)
+router.get('/:roomId/cdg-video', async (ctx) => {
+  if (!ctx.user.isAdmin) {
+    ctx.throw(401)
+  }
+
+  const roomId = parseInt(ctx.params.roomId, 10)
+
+  if (isNaN(roomId)) {
+    ctx.throw(422, 'Invalid roomId')
+  }
+
+  const video = cdgVideoFile(roomId)
+
+  if (!video) {
+    ctx.throw(404)
+    return
+  }
+
+  const stats = await fs.promises.stat(video.file)
+
+  if (typeof ctx.query.v !== 'undefined') {
+    ctx.set('Cache-Control', 'max-age=31536000')
+  }
+
+  ctx.length = stats.size
+  ctx.type = video.mimeType
+  ctx.body = fs.createReadStream(video.file)
+})
+
+// upload a room CD+G backdrop video (admin)
+router.put('/:roomId/cdg-video', async (ctx) => {
+  if (!ctx.user.isAdmin) {
+    ctx.throw(401)
+  }
+
+  const roomId = parseInt(ctx.params.roomId, 10)
+
+  if (isNaN(roomId)) {
+    ctx.throw(422, 'Invalid roomId')
+  }
+
+  const room = Rooms.get(roomId)
+  if (!room.result.length) {
+    ctx.throw(404, 'Room not found')
+  }
+
+  const req = ctx.request as unknown as RequestWithBody
+  const upload = req.files?.video
+  const videoFile = Array.isArray(upload) ? upload[0] : upload
+
+  if (!videoFile) {
+    ctx.throw(422, 'Video required')
+  }
+
+  try {
+    if (videoFile.size > CDG_VIDEO_MAX_BYTES) {
+      ctx.throw(413, `Video must not exceed ${Math.floor(CDG_VIDEO_MAX_BYTES / (1024 * 1024))}MB`)
+    }
+
+    const ext = extensionFor(videoFile.originalFilename || '')
+    if (!ext) {
+      ctx.throw(422, 'Video must be an MP4, M4V, or MOV file')
+    }
+
+    const header = await readFileHeader(videoFile.filepath)
+    if (!isQuickTimeContainer(header)) {
+      ctx.throw(422, 'Video must be an MP4 or MOV file')
+    }
+
+    await saveCdgVideo(roomId, videoFile.filepath, ext)
+    log.info('%s set CD+G backdrop video for roomId %s (%s bytes)', ctx.user.name, roomId, videoFile.size)
+
+    const dateUpdated = Math.floor(Date.now() / 1000)
+    const current = room.entities[roomId]
+    const prefs = {
+      ...current.prefs,
+      cdgVideo: {
+        dateUpdated,
+      },
+    }
+
+    await Rooms.set(roomId, {
+      name: current.name,
+      status: current.status,
+      prefs,
+    })
+
+    pushRoomPrefs(ctx.io, roomId, prefs)
+    ctx.body = { dateUpdated, prefs }
+  } finally {
+    await deleteFile(videoFile.filepath).catch(() => {})
+  }
+})
+
+// remove the room CD+G backdrop video (admin)
+router.delete('/:roomId/cdg-video', async (ctx) => {
+  if (!ctx.user.isAdmin) {
+    ctx.throw(401)
+  }
+
+  const roomId = parseInt(ctx.params.roomId, 10)
+
+  if (isNaN(roomId)) {
+    ctx.throw(422, 'Invalid roomId')
+  }
+
+  clearCdgVideo(roomId)
+  log.info('%s cleared CD+G backdrop video for roomId %s', ctx.user.name, roomId)
+
+  const res = Rooms.get(roomId)
+  const current = res.entities[roomId]
+  let prefs = null
+
+  if (current) {
+    prefs = {
+      ...current.prefs,
+      cdgVideo: {
+        dateUpdated: null,
+      },
+    }
+
+    await Rooms.set(roomId, {
+      name: current.name,
+      status: current.status,
+      prefs,
+    })
+
+    pushRoomPrefs(ctx.io, roomId, prefs)
+  }
+
+  ctx.body = { dateUpdated: null, prefs }
 })
 
 export default router

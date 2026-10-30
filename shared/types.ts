@@ -63,6 +63,13 @@ export interface IRoomPrefs {
     /** Custom text when mode is `message` (default: CAN HAZ MOAR SONGZ?) */
     message?: string
   }
+  /**
+   * Looping clip shown on the Apple TV between the CD+G background color and the lyrics.
+   * `dateUpdated` is a cache-buster; null/absent means no clip.
+   */
+  cdgVideo?: {
+    dateUpdated?: number | null
+  }
 }
 
 export interface Room {

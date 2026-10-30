@@ -21,15 +21,23 @@ const PlayerController = (props: PlayerControllerProps) => {
   const roomPrefs = useAppSelector(getRoomPrefs)
   const queueItem = queue.entities[player.queueId]
   const nextQueueItem = queue.entities[queue.result[queue.result.indexOf(player.queueId) + 1]]
-  const mediaId = player._mediaIdOverride ?? queueItem?.mediaId ?? null
-  const mediaType = player._mediaTypeOverride ?? queueItem?.mediaType ?? null
+  // Prefer sticky player.mediaId so prefer/corrupt QUEUE_PUSH updates do not
+  // change what is currently loaded. Override is set only by "play this version".
+  const mediaId = player._mediaIdOverride ?? player.mediaId ?? queueItem?.mediaId ?? null
+  const mediaType = player._mediaTypeOverride ?? player.mediaType ?? queueItem?.mediaType ?? null
   const rgTrackGain = player._mediaIdOverride !== null
     ? player._rgTrackGainOverride
     : (queueItem ? queueItem.rgTrackGain : null)
   const rgTrackPeak = player._mediaIdOverride !== null
     ? player._rgTrackPeakOverride
     : (queueItem ? queueItem.rgTrackPeak : null)
-  const mediaKey = queueItem && typeof mediaId === 'number' ? `${queueItem.queueId}:${mediaId}` : null
+  // Keep mediaKey stable across prefer/corrupt QUEUE_PUSH updates so mid-play
+  // selection changes do not reload audio. Only "play this version now" overrides.
+  const mediaKey = queueItem
+    ? (player._mediaIdOverride !== null
+        ? `${queueItem.queueId}:${player._mediaIdOverride}`
+        : queueItem.queueId)
+    : null
 
   const dispatch = useAppDispatch()
   const handleStatus = useCallback((status?: Partial<PlayerState>) => dispatch(playerStatus(status)), [dispatch])

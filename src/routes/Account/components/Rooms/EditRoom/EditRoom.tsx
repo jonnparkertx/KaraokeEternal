@@ -7,6 +7,7 @@ import Modal from 'components/Modal/Modal'
 import UserPrefs from './UserPrefs/UserPrefs'
 import QRPrefs from './QRPrefs/QRPrefs'
 import IdlePrefs from './IdlePrefs/IdlePrefs'
+import CDGVideoPrefs from './CDGVideoPrefs/CDGVideoPrefs'
 import type { Room, IRoomPrefs } from 'shared/types'
 import styles from './EditRoom.css'
 
@@ -110,6 +111,7 @@ const EditRoom = ({ onClose, room }: EditRoomProps) => {
           <UserPrefs prefs={prefs} onChange={handlePrefsChange} />
           <QRPrefs prefs={prefs} onChange={handlePrefsChange} roomId={room?.roomId} roomPassword={roomPassword} roomPasswordDirty={isPasswordDirty} />
           <IdlePrefs prefs={prefs} onChange={handlePrefsChange} />
+          <CDGVideoPrefs prefs={prefs} onChange={handlePrefsChange} roomId={room?.roomId} />
         </div>
 
         <div className={styles.btnContainer}>
